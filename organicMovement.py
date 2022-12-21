@@ -1,92 +1,89 @@
 import pygame
 import random
-import math
 
 # Initialize pygame
 pygame.init()
 
-# Set screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+# Set the window size
+window_size = (1000, 800)
 
-# Create the screen
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+# Create the window
+screen = pygame.display.set_mode(window_size)
 
-# Colors
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
+# Set the title of the window
+pygame.display.set_caption('Bouncing Balls')
 
-# Ball dimensions
-BALL_RADIUS = 10
+# Set the colors for the balls
+colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 
-# Number of balls
-NUM_BALLS = 4
+# Set the initial positions and velocities for the balls
+balls = []
+for color in colors:
+    for i in range(5):
+        if color == (255, 0, 0):  # Red balls
+            x = random.randint(window_size[0] - 300, window_size[0] - 20)  # Top right
+            y = random.randint(1, 350)  # Top right
+        elif color == (0, 255, 0):  # Green balls
+            x = random.randint((window_size[0] / 2) - 200, (window_size[0] / 2) + 200)  # Bottom center
+            y = random.randint(450, 780)
+        else:  # Blue balls
+            x = random.randint(20, 350)   # Top left
+            y = random.randint(1, 350)
+        vx = random.uniform(-3, 3)
+        vy = random.uniform(-3, 3)
+        balls.append((x, y, vx, vy, color))
 
-# Lists to store ball data
-red_positions = []
-blue_positions = []
-green_positions = []
-red_speeds = []
-blue_speeds = []
-green_speeds = []
+# Set the radius of the balls
+radius = 20
 
-# Initial
-
-# Initialize ball positions and speeds
-for i in range(NUM_BALLS):
-    red_positions.append([random.randint(BALL_RADIUS, SCREEN_WIDTH - BALL_RADIUS), random.randint(BALL_RADIUS, SCREEN_HEIGHT - BALL_RADIUS)])
-    blue_positions.append([random.randint(BALL_RADIUS, SCREEN_WIDTH - BALL_RADIUS), random.randint(BALL_RADIUS, SCREEN_HEIGHT - BALL_RADIUS)])
-    green_positions.append([random.randint(BALL_RADIUS, SCREEN_WIDTH - BALL_RADIUS), random.randint(BALL_RADIUS, SCREEN_HEIGHT - BALL_RADIUS)])
-    red_speeds.append([random.randint(-5, 5), random.randint(-5, 5)])
-    blue_speeds.append([random.randint(-5, 5), random.randint(-5, 5)])
-    green_speeds.append([random.randint(-5, 5), random.randint(-5, 5)])
-
-# Game loop
+# Run the game loop
 running = True
 while running:
+    # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
-    # Update ball positions
-    for i in range(NUM_BALLS):
-        red_positions[i][0] += red_speeds[i][0]
-        red_positions[i][1] += red_speeds[i][1]
-        blue_positions[i][0] += blue_speeds[i][0]
-        blue_positions[i][1] += blue_speeds[i][1]
-        green_positions[i][0] += green_speeds[i][0]
-        green_positions[i][1] += green_speeds[i][1]
-
-    # Check for ball-wall collisions and reverse direction if necessary
-    for i in range(NUM_BALLS):
-        if red_positions[i][0] - BALL_RADIUS < 0 or red_positions[i][0] + BALL_RADIUS > SCREEN_WIDTH:
-            red_speeds[i][0] = -red_speeds[i][0]
-        if red_positions[i][1] - BALL_RADIUS < 0 or red_positions[i][1] + BALL_RADIUS > SCREEN_HEIGHT:
-            red_speeds[i][1] = -red_speeds[i][1]
-        if blue_positions[i][0] - BALL_RADIUS < 0 or blue_positions[i][0] + BALL_RADIUS > SCREEN_WIDTH:
-            blue_speeds[i][0] = -blue_speeds[i][0]
-        if blue_positions[i][1] - BALL_RADIUS < 0 or blue_positions[i][1] + BALL_RADIUS > SCREEN_HEIGHT:
-            blue_speeds[i][1] = -blue_speeds[i][1]
-        if green_positions[i][0] - BALL_RADIUS < 0 or green_positions[i][0] + BALL_RADIUS > SCREEN_WIDTH:
-            green_speeds[i][0] = -green_speeds[i][0]
-        if green_positions[i][1] - BALL_RADIUS < 0 or green_positions[i][1] + BALL_RADIUS > SCREEN_HEIGHT:
-            green_speeds[i][1] = -green_speeds[i][1]
-
+    
+    # Update the positions of the balls
+    for i in range(len(balls)):
+        x, y, vx, vy, color = balls[i]
+        x += vx
+        y += vy
+        if x < radius or x > window_size[0] - radius:
+            vx = -vx
+        if y < radius or y > window_size[1] - radius:
+            vy = -vy
+        balls[i] = (x, y, vx, vy, color)
+    
+    # Check for collisions between the balls
+    for i in range(len(balls)):
+        for j in range(i + 1, len(balls)):
+            x1, y1, vx1, vy1, color1 = balls[i]
+            x2, y2, vx2, vy2, color2 = balls[j]
+            dx = x2 - x1
+            dy = y2 - y1
+            d = (dx**2 + dy**2)**0.5
+            if d < (2 * radius)-1:
+                # Update the colors of the balls that are involved in the collision
+                if color1 == (0, 255, 0) and color2 == (0, 0, 255):
+                    color2 = (0, 255, 0)
+                elif color1 == (0, 0, 255) and color2 == (255, 0, 0):
+                    color2 = (0, 0, 255)
+                elif color1 == (255, 0, 0) and color2 == (0, 255, 0):
+                    color2 = (255, 0, 0)
+                vx1, vy1, vx2, vy2 = vx2, vy2, vx1, vy1
+                balls[i] = (x1, y1, vx1, vy1, color1)
+                balls[j] = (x2, y2, vx2, vy2, color2)
+    
     # Clear the screen
-    screen.fill((0, 0, 0))
-
+    screen.fill((225, 225, 225)) 
+    
     # Draw the balls
-    for i in range(NUM_BALLS):
-        pygame.draw.circle(screen, RED, red_positions[i], BALL_RADIUS)
-        pygame.draw.circle(screen, BLUE, blue_positions[i], BALL_RADIUS)
-        pygame.draw.circle(screen, GREEN, green_positions[i], BALL_RADIUS)
-
+    for x, y, vx, vy, color in balls:
+        pygame.draw.circle(screen, color, (int(x), int(y)), radius)
+    
     # Update the display
-    pygame.display.update()
-
-    # Set frame rate
-    pygame.time.delay(30)
+    pygame.display.flip()
 
 # Quit pygame
 pygame.quit()
